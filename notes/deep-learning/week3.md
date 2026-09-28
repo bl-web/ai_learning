@@ -8,13 +8,7 @@ d_head: 每个注意力头里面一个token的向量维度
 - 单头注意力：每个token都只有一套Q,K,V，一般shape为` [B,T,d_k] ` ` [B,T,d_k] ` `[B,T,d_v] `
 
 $$
-\mathrm{new}_x
-=
-\mathrm{softmax}
-\left(
-\frac{QK^\top}{\sqrt{d_k}}
-\right)
-V
+\mathrm{new_x}=\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
 $$
 
 - 为什么要除以 $\sqrt{d_k}$ 呢？
