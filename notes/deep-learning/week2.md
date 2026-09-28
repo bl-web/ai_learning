@@ -56,6 +56,7 @@ for epoch in range(num_epochs):
 - 通过Q,K,V来确定注意力的过程:
 1. 首先在Embedding表中找到token对应的向量  
 2. 通过三个linear层来计算出每个token的Q,K,V  
-3. 然后用一个token的Q与所有的token(包括自己)的K做点积，得到一组token之间供需关系的强度   
+3. 然后用一个token的Q与所有的token(包括自己)的K做点积，得到一组token之间供需关系的强度，即一个token该不该被关注的强度  
 4. 然后把这一组数字过一遍softmax，将其转化为权值` [w1,w2,w3]  `    
 5. 最后通过公式` new_x=w1*v1+w2*v2+w3*v3 `得到新的token对应的向量
+- 区分K与V：K决定着我应该找谁，V决定着我真正需要的内容
