@@ -82,3 +82,38 @@ x_2=x_1+\mathrm{FFN}(\mathrm{LayerNorm}(x_1))
 $$
 
 - 一个完整的Transformer的流程，通常要经过很多个block，且每个block输出的shape都是[B,T,C]
+
+## Pretraining与生成答案
+- 预训练：给模型喂大量的语料，通过自监督学习的过程，建立起base-model
+- Pretraining可以并行计算，同时计算多个token的预测结果，并计算损失求平均统一更新参数  
+但是生成答案的时候只能一个token一个token的生成，并反复将其添加到输入后面继续进行下一个token的预测
+- 选择token的策略：  
+1. Greedy：直接选择概率最高的token，即` next_token=logits.argmax(dim=-1) `
+2. Temperature:控制各个token的平滑程度
+
+$$
+p_i=\frac{\exp(z_i/\tau)}{\sum_j\exp(z_j/\tau)}
+$$
+
+- τ>1时，分布更平滑、随机，token之间的差距更小  
+τ=1时，不改变分布的差距  
+τ<1时，分布更尖锐，保守，但生成更单一
+3. Top-k:只留前k个，重新归一化之后采样选择  
+4. Top-p:按照概率由高到低排序，只留概率相加到p的几个token，重新归一化之后采样选择
+
+## SFT与偏好对齐
+- SFT：让模型能够按照指令和问题进行回答，对话，训练的时候将数据拆分为问题与回答，重点训练模型怎么做出更好的回答。
+- 偏好对齐：让回答更符合人类的偏好，包括RLHF和DPO
+- RLHF：
+$$
+\max_\theta\mathbb{E}\left[r_\phi(x,y)-\beta D_{\mathrm{KL}}(\pi_\theta\parallel\pi_{\mathrm{ref}})\right)
+$$
+
+## KV cache
+- 我们在生成答案的时候，前面几个token的K,V由于后面继续预测的时候还需要用到，所以会将其存起来，这样可以不用重复计算
+
+## LoRA
+- 模型在针对某一类任务进行训练的时候，有时候并不需要全量微调，于是冻结W0,引入LoRA。
+- 我们指定将LoRA运用到哪几块，用到W_q,W_k等等，都由我们决定
+- 前向传播的公式：$W=W_0x+BAx$
+- 其中，W_0=[n,n]不更新，我们只更新B,A,B_shape=[n,r],A_shape=[r,n]，r为超参，A一开始随机化，B一开始全部赋值为0，之后通过学习更新参数，更新参数也是LoRA真正节省算力的一步。
