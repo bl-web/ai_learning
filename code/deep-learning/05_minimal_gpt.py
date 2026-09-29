@@ -67,7 +67,7 @@ max_steps = 500
 eval_interval = 50
 learning_rate = 3e-3
 
-assert n_embd % n_head == 0
+assert n_embd % n_head == 0 #不能整除就报错
 head_size = n_embd // n_head
 
 
@@ -199,11 +199,13 @@ class MiniGPT(nn.Module):
 
         loss = None
         if targets is not None:
-            # get_batch() 已经让 targets[t] = x[t+1]，
-            # 所以这里直接把每个位置的 logits 与 targets 对齐即可。
+            # 位置 t 的预测用于预测位置 t+1 的 token。
+            logits_for_loss = logits[:, :-1, :]              # [B, T-1, V]
+            targets_for_loss = targets[:, 1:]                # [B, T-1]
+
             loss = F.cross_entropy(
-                logits.reshape(-1, vocab_size),
-                targets.reshape(-1),
+                logits_for_loss.reshape(-1, vocab_size),
+                targets_for_loss.reshape(-1),
             )
 
         return logits, loss
@@ -262,4 +264,3 @@ for step in range(max_steps + 1):
 print("================ 生成结果 ================")
 result = model.generate("今天", max_new_tokens=14)
 print(result)
-
